@@ -1,0 +1,1921 @@
+
+
+=== docs/observability/metrics.md ===
+
+
+FTL collects and exports a variety of metrics to help you monitor and understand the behavior of your FTL deployment using OTEL. This allows cluster operators to consume metrics in their preferred monitoring system e.g. Prometheus, Grafana, Datadog etc.
+
+Note on Metric Types:
+- Counters typically have a `total` suffix in Prometheus, which is omitted here for brevity.
+- Histograms typically have `bucket`, `sum`, and `count` variants, with `bucket` including multiple entries for different bucket boundaries.
+- Gauges represent a single numerical value that can go up and down.
+
+Note: this documentation is incomplete
+
+FTL Metrics
+
+Metrics Table
+
+| Metric Name                          | Type      | Description                                        |
+| ------------------------------------ | --------- | -------------------------------------------------- |
+| `ftl.asynccall.acquired`            | Counter   | Number of times an async call was acquired         |
+| `ftl.asynccall.completed`           | Counter   | Number of completed async calls                    |
+| `ftl.asynccall.created`             | Counter   | Number of created async calls                      |
+| `ftl.asynccall.executed`            | Counter   | Number of executed async calls                     |
+| `ftl.asynccall.mstocomplete`      | Histogram | Time taken to complete async calls in milliseconds |
+| `ftl.asynccall.queuedepthratio`   | Gauge     | Ratio of queued async calls                        |
+| `ftl.call.mstocomplete`            | Histogram | Time taken to complete calls in milliseconds       |
+| `ftl.call.requests`                  | Counter   | Total number of call requests                      |
+| `ftl.deployments.runner.active`      | Gauge     | Number of active deployment runners                |
+| `ftl.runner.registration.heartbeats` | Counter   | Total number of runner registration heartbeats     |
+| `ftl.timeline.inserted`              | Counter   | Total number of timeline insertions                |
+
+Attributes
+
+Attributes provide additional context and dimensions for metrics and are often used for analysis and filtering. Each section below represents an attribute key that is collected for a specific set of metrics.
+
+ftl.asynccall.catching
+- `ftl.asynccall.acquired`
+- `ftl.asynccall.completed`
+- `ftl.asynccall.created`
+- `ftl.asynccall.executed`
+- `ftl.asynccall.mstocomplete`
+
+ftl.asynccall.origin
+- `ftl.asynccall.acquired`
+- `ftl.asynccall.completed`
+- `ftl.asynccall.created`
+- `ftl.asynccall.executed`
+- `ftl.asynccall.mstocomplete`
+
+ftl.asynccall.timesincescheduledatms.bucket
+- `ftl.asynccall.acquired`
+- `ftl.asynccall.completed`
+- `ftl.asynccall.executed`
+
+ftl.asynccall.verb.ref
+- `ftl.asynccall.acquired`
+- `ftl.asynccall.completed`
+- `ftl.asynccall.created`
+- `ftl.asynccall.executed`
+- `ftl.asynccall.mstocomplete`
+
+ftl.module.name
+- `ftl.asynccall.acquired`
+- `ftl.asynccall.completed`
+- `ftl.asynccall.created`
+- `ftl.asynccall.executed`
+- `ftl.asynccall.mstocomplete`
+- `ftl.call.mstocomplete`
+- `ftl.call.requests`
+
+ftl.outcome.status
+- `ftl.asynccall.acquired`
+- `ftl.asynccall.completed`
+- `ftl.asynccall.created`
+- `ftl.asynccall.executed`
+- `ftl.asynccall.mstocomplete`
+- `ftl.call.mstocomplete`
+- `ftl.call.requests`
+
+ftl.asynccall.remainingattempts
+- `ftl.asynccall.created`
+
+ftl.call.verb.ref
+- `ftl.call.mstocomplete`
+- `ftl.call.requests`
+
+ftl.call.runtimems.bucket
+- `ftl.call.requests`
+
+ftl.deployment.key
+- `ftl.deployments.runner.active`
+- `ftl.runner.registration.heartbeats`
+
+DB Metrics
+
+DB Metrics are collected from the SQL database used by FTL. These metrics provide insights into the database connection pool, query latency etc.
+
+Metrics Table
+
+| Metric Name                                    | Type      | Description                                                    |
+| ---------------------------------------------- | --------- | -------------------------------------------------------------- |
+| `db.sql.connection.closedmaxidletime`       | Counter   | Total number of connections closed due to max idle time        |
+| `db.sql.connection.closedmaxidle`            | Counter   | Total number of connections closed due to max idle connections |
+| `db.sql.connection.closedmaxlifetime`        | Counter   | Total number of connections closed due to max lifetime         |
+| `db.sql.connection.maxopen`                   | Gauge     | Maximum number of open connections                             |
+| `db.sql.connection.open`                       | Gauge     | Number of open connections                                     |
+| `db.sql.connection.waitdurationmilliseconds` | Histogram | Duration of connection wait times in milliseconds              |
+| `db.sql.connection.wait`                       | Counter   | Total number of connection waits                               |
+| `db.sql.latencymilliseconds`                  | Histogram | SQL query latency in milliseconds                              |
+
+Attributes
+
+db.system
+- `db.sql.connection.closedmaxidletime`
+- `db.sql.connection.closedmaxidle`
+- `db.sql.connection.closedmaxlifetime`
+- `db.sql.connection.maxopen`
+- `db.sql.connection.open`
+- `db.sql.connection.waitdurationmilliseconds`
+- `db.sql.connection.wait`
+
+status
+- `db.sql.connection.open`
+- `db.sql.latencymilliseconds`
+
+method
+- `db.sql.latencymilliseconds`
+
+le (less than or equal to)
+- `db.sql.latencymilliseconds_bucket`
+
+Note: The `job` attribute with value "ftl-serve" is common to all metrics and has been omitted from the individual listings for brevity.
+
+
+=== docs/getting-started/introduction.md ===
+
+
+FTL is tooling, runtimes, and frameworks for simplifying the creation of distributed systems.
+
+
+=== docs/getting-started/quick-start/index.md ===
+
+
+Requirements
+
+Install the FTL CLI
+
+Install the FTL CLI via Hermit, Homebrew, or manually.
+
+Hermit (Mac or Linux)
+
+FTL can be installed from the main Hermit package repository by simply:
+
+```
+hermit install ftl
+```
+
+Alternatively you can add hermit-ftl to your sources by adding the following to your Hermit environment's `bin/hermit.hcl` file:
+
+```hcl
+sources = ["https://github.com/TBD54566975/hermit-ftl.git", "https://github.com/cashapp/hermit-packages.git"]
+```
+
+Homebrew (Mac or Linux)
+
+```
+brew tap TBD54566975/ftl && brew install ftl
+```
+
+Manually (Mac or Linux)
+
+Download binaries from the latest release page and place them in your `$PATH`.
+
+Install the VSCode extension
+
+The FTL VSCode extension will run FTL within VSCode, and provide LSP support for FTL, displaying errors within the editor.
+
+Development
+
+Intitialize an FTL project
+
+Once FTL is installed, initialize an FTL project:
+
+```
+mkdir myproject
+cd myproject
+ftl init myproject . --hermit
+```
+
+This will create an `ftl-project.toml` file, a git repository, and a `bin/` directory with Hermit tooling.
+
+Create a new module
+
+Now that you have an FTL project, create a new module:
+
+{% codeselector() %}
+
+```
+ftl new go . alice
+```
+This will place the code for the new module `alice` in `myproject/alice/alice.go`:
+
+```go
+package alice
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/TBD54566975/ftl/go-runtime/ftl" // Import the FTL SDK.
+)
+
+type EchoRequest struct {
+	Name ftl.Option[string] `json:"name"`
+}
+
+type EchoResponse struct {
+	Message string `json:"message"`
+}
+
+//ftl:verb
+func Echo(ctx context.Context, req EchoRequest) (EchoResponse, error) {
+	return EchoResponse{Message: fmt.Sprintf("Hello, %s!", req.Name.Default("anonymous"))}, nil
+}
+```
+
+Each module is its own Go module.
+
+```
+ftl new kotlin . alice
+```
+
+This will create a new Maven `pom.xml` based project in the directory `alice` and create new example code in `alice/src/main/kotlin/com/example/EchoVerb.kt`:
+
+```kotlin
+package com.example
+
+import xyz.block.ftl.Export
+import xyz.block.ftl.Verb
+
+@Export
+@Verb
+fun echo(req: String): String = "Hello, $req!"
+```
+
+```
+ftl new java . alice
+```
+This will create a new Maven `pom.xml` based project in the directory `alice` and create new example code in `alice/src/main/java/com/example/EchoVerb.java`:
+
+```java
+package com.example;
+
+import xyz.block.ftl.Export;
+import xyz.block.ftl.Verb;
+
+public class EchoVerb {
+
+    @Export
+    @Verb
+    public String echo(String request) {
+        return "Hello, " + request + "!";
+    }
+}
+```
+{% end %}
+
+Any number of modules can be added to your project, adjacent to each other.
+
+Start the FTL cluster
+
+VSCode
+
+If using VSCode, opening the directory will prompt you to start FTL:
+
+Manually
+
+Alternatively start the local FTL development cluster from the command-line:
+
+This will build and deploy all local modules. Modifying the code will cause `ftl
+dev` to rebuild and redeploy the module.
+
+Open the console
+
+FTL has a console that allows interaction with the cluster topology, logs, traces,
+and more. Open a browser window at https://localhost:8892 to view it:
+
+Call your verb
+
+You can call verbs from the console:
+
+!console call
+
+Or from a terminal use `ftl call` to call your verb:
+
+Create another module
+
+Create another module and call `alice.echo` from it with by importing the `alice` module and adding the verb client,
+`alice.EchoClient`, to the signature of the calling verb. It can be invoked as a function:
+
+{% codeselector() %}
+
+```go
+//ftl:verb
+import "ftl/alice"
+
+//ftl:verb
+func Other(ctx context.Context, in Request, ec alice.EchoClient) (Response, error) {
+    out, err := ec(ctx, alice.EchoRequest{...})
+	...
+}
+```
+
+```kotlin
+package com.example
+
+import xyz.block.ftl.Export
+import xyz.block.ftl.Verb
+import ftl.alice.EchoClient
+
+@Export
+@Verb
+fun other(req: String, echo: EchoClient): String = "Hello from Other , ${echo.call(req)}!"
+```
+Note that the `EchoClient` is generated by FTL and must be imported. Unfortunately at the moment JVM based languages have
+a bit of a chicken-and-egg problem with the generated clients. To force a dependency between the modules you need to add
+an import on a class that does not exist yet, and then FTL will generate the client for you. This will be fixed in the future.
+
+```java
+package com.example.client;
+
+import xyz.block.ftl.Export;
+import xyz.block.ftl.Verb;
+import ftl.alice.EchoClient;
+
+public class OtherVerb {
+
+    @Export
+    @Verb
+    public String other(String request, EchoClient echoClient) {
+        return "Hello, " + echoClient.call(request) + "!";
+    }
+}
+```
+Note that the `EchoClient` is generated by FTL and must be imported. Unfortunately at the moment JVM based languages have
+a bit of a chicken-and-egg problem with the generated clients. To force a dependency between the modules you need to add
+an import on a class that does not exist yet, and then FTL will generate the client for you. This will be fixed in the future.
+
+{% end %}
+
+What next?
+
+Explore the reference documentation.
+
+
+=== docs/reference/visibility.md ===
+
+
+By default all declarations in FTL are visible only to the module they're declared in. The implicit visibility of types is that of the first verb or other declaration that references it.
+
+Exporting declarations
+
+Exporting a declaration makes it accessible to other modules. Some declarations that are entirely local to a module, such as secrets/config, cannot be exported.
+
+Types that are transitively referenced by an exported declaration will be automatically exported unless they were already defined but unexported. In this case, an error will be raised and the type must be explicitly exported.
+
+{% code_selector() %}
+
+The following table describes the go directives used to export the corresponding declaration:
+
+| Symbol        | Export syntax            |
+| ------------- | ------------------------ |
+| Verb          | `//ftl:verb export`      |
+| Data          | `//ftl:data export`      |
+| Enum/Sum type | `//ftl:enum export`      |
+| Typealias     | `//ftl:typealias export` |
+| Topic         | `//ftl:export` [^1]      |
+```go
+//ftl:verb export
+func Verb(ctx context.Context, in In) (Out, error)
+
+//ftl:typealias export
+type UserID string
+```
+
+[^1]: By default, topics do not require any annotations as the declaration itself is sufficient.
+
+For Kotlin the `@Export` annotation can be used to export a declaration:
+
+```kotlin
+@Verb
+@Export
+fun time(): TimeResponse {
+    // ...
+}
+```
+
+For Java the `@Export` annotation can be used to export a declaration:
+
+```java
+@Verb
+@Export
+TimeResponse time()  {
+    // ...
+}
+```
+{% end %}
+
+
+=== docs/reference/pubsub.md ===
+
+
+FTL has first-class support for PubSub, modelled on the concepts of topics (where events are sent), subscriptions (a cursor over the topic), and subscribers (functions events are delivered to). Subscribers are, as you would expect, sinks. Each subscription is a cursor over the topic it is associated with. Each topic may have multiple subscriptions. Each subscription may have multiple subscribers, in which case events will be distributed among them.
+
+{% codeselector() %}
+
+First, declare a new topic:
+
+```go
+var Invoices = ftl.TopicInvoice
+```
+
+Then declare each subscription on the topic:
+
+```go
+var  = ftl.Subscription(Invoices, "emailInvoices")
+```
+
+And finally define a Sink to consume from the subscription:
+
+```go
+//ftl:subscribe emailInvoices
+func SendInvoiceEmail(ctx context.Context, in Invoice) error {
+  // ...
+}
+```
+
+Events can be published to a topic like so:
+
+```go
+Invoices.Publish(ctx, Invoice{...})
+```
+
+First, declare a new topic :
+
+```kotlin
+@Export
+@TopicDefinition("invoices")
+internal interface InvoiceTopic : Topic<Invoice>
+```
+
+Events can be published to a topic by injecting it into an `@Verb` method:
+
+```kotlin
+@Verb
+fun publishInvoice(request: InvoiceRequest, topic: InvoiceTopic) {
+    topic.publish(Invoice(request.getInvoiceNo()))
+}
+```
+
+There are two ways to subscribe to a topic. The first is to declare a method with the `@Subscription` annotation, this is generally used when
+subscribing to a topic inside the same module:
+
+```kotlin
+@Subscription(topic = "invoices", name = "invoicesSubscription")
+fun consumeInvoice(event: Invoice) {
+    // ...
+}
+```
+
+This is ok, but it requires the use of string constants for the topic name, which can be error-prone. If you are subscribing to a topic from
+another module, FTL will generate a type-safe subscription meta annotation you can use to subscribe to the topic:
+
+```kotlin
+@Subscription(topic = "invoices", module = "publisher", name = "invoicesSubscription")
+annotation class InvoicesSubscription 
+```
+
+This annotation can then be used to subscribe to the topic:
+
+```kotlin
+@InvoicesSubscription
+fun consumeInvoice(event: Invoice) {
+    // ...
+}
+```
+
+Note that if you want multiple subscriptions or control over the subscription name you will need to use the `@Subscription` annotation.
+
+First, declare a new topic:
+
+```java
+@Export
+@TopicDefinition("invoices")
+interface InvoiceTopic extends Topic<Invoice> {}
+```
+
+Events can be published to a topic by injecting it into an `@Verb` method:
+
+```java
+@Verb
+void publishInvoice(InvoiceRequest request, InvoiceTopic topic) throws Exception {
+    topic.publish(new Invoice(request.getInvoiceNo()));
+}
+```
+
+There are two ways to subscribe to a topic. The first is to declare a method with the `@Subscription` annotation, this is generally used when
+subscribing to a topic inside the same module:
+
+```java
+@Subscription(topicClass = InvoiceTopic.class, name = "invoicesSubscription")
+public void consumeInvoice(Invoice event) {
+    // ...
+}
+```
+
+If you are subscribing to a topic from another module, FTL will generate a type-safe subscription meta annotation you can use to subscribe to the topic:
+
+```java
+@Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+@Subscription(
+        topic = "invoices",
+        module = "publisher",
+        name = "invoicesSubscription"
+)
+public @interface InvoicesSubscription {
+}
+```
+
+This annotation can then be used to subscribe to the topic:
+
+```java
+@InvoicesSubscription
+public void consumeInvoice(Invoice event) {
+    // ...
+}
+```
+
+Note that if you want multiple subscriptions or control over the subscription name you will need to use the `@Subscription` annotation.
+
+{% end %}
+> NOTE!
+> PubSub topics cannot be published to from outside the module that declared them, they can only be subscribed to. That is, if a topic is declared in module `A`, module `B` cannot publish to it.
+
+
+=== docs/reference/fsm.md ===
+
+
+FTL has first-class support for distributed finite-state machines. Each state in the state machine is a Sink, with events being values of the type of each sinks input. The FSM is declared once, with each executing instance of the FSM identified by a unique key when sending an event to it.
+
+Here's an example of an FSM that models a simple payment flow:
+
+```go
+var payment = ftl.FSM(
+  "payment",
+  ftl.Start(Invoiced),
+  ftl.Start(Paid),
+  ftl.Transition(Invoiced, Paid),
+  ftl.Transition(Invoiced, Defaulted),
+)
+
+//ftl:verb
+func SendDefaulted(ctx context.Context, in DefaultedInvoice) error {
+  return payment.Send(ctx, in.InvoiceID, in.Timeout)
+}
+
+//ftl:verb
+func Invoiced(ctx context.Context, in Invoice) error {
+  if timedOut {
+    return ftl.CallAsync(ctx, SendDefaulted, Timeout{...})
+  }
+}
+
+//ftl:verb
+func Paid(ctx context.Context, in Receipt) error { / ... / }
+
+//ftl:verb
+func Defaulted(ctx context.Context, in Timeout) error { / ... / }
+```
+
+Creating and transitioning instances
+
+To send an event to an fsm instance, call `Send()` on the FSM with the instance's unique key. The first time you send an event for an instance key, an fsm instance will be created. 
+
+An example of creating an FSM instance and then transitioning it through it's states is shown below:
+
+```go
+err := payment.Send(ctx, invoiceID, Invoice {Amount: 110})
+err = payment.Send(ctx, invoiceID, Receipt {Amount: 110})
+```
+
+When an event is sent to the FSM the method to be called is determined by matching the current state and event payload
+type to methods that can transition from the current state and have the same payload type. In the example above the first
+`Send` call will created the FSM, and will call the `Invoiced` method as it is a start state and takes an `Invoice` as
+payload. The second `Send` call will call the `Paid` method as it is a transition from the `Invoiced` state and takes a
+`Receipt` as payload. If the second call had sent a `Timeout` instead of a `Receipt` the FSM would have called the `Defaulted`
+method instead.
+
+It is important to note that in this model the methods both represent a state, and a way to transition into that
+state. This means when a method is invoked it always moves to the corresponding state, consider the following example:
+
+```go
+err := payment.Send(ctx, invoiceID, Invoice {Amount: 110})
+err = payment.Send(ctx, invoiceID, Receipt {Amount: 20})
+```
+
+In this case it would still moved to the `Paid` state even though the customer only paid 20 of the 110.
+
+Sending an event to an FSM is asynchronous. From the time an event is sent until the state function completes execution, the FSM is transitioning. It is invalid to send an event to an FSM that is transitioning.
+
+During a transition you may need to trigger a transition to another state. This can be done by calling `Next()` on the FSM:
+
+```go
+err := payment.Next(ctx, invoiceID, Receipt{...})
+```
+
+
+=== docs/reference/verbs.md ===
+
+
+Defining Verbs
+
+{% codeselector() %}
+
+To declare a Verb, write a normal Go function with the following signature, annotated with the Go comment directive `//ftl:verb`:
+
+```go
+//ftl:verb
+func F(context.Context, In) (Out, error) { }
+```
+
+eg.
+
+```go
+type EchoRequest struct {}
+
+type EchoResponse struct {}
+
+//ftl:verb
+func Echo(ctx context.Context, in EchoRequest) (EchoResponse, error) {
+  // ...
+}
+```
+
+To declare a Verb, write a normal Kotlin function with the following signature, annotated with the Kotlin annotation `@Verb`:
+
+```kotlin
+@Verb
+fun F(In): Out { }
+```
+
+eg.
+
+```kotlin
+data class EchoRequest
+data class EchoResponse
+
+@Verb
+fun echo(request: EchoRequest): EchoResponse {
+  // ...
+}
+```
+
+{% end %}
+
+By default verbs are only visible to other verbs in the same module.
+
+Calling Verbs
+
+{% codeselector() %}
+
+To call a verb, import the module's verb client (`{ModuleName}.{VerbName}Client`), add it to your verb's signature, then invoke it as a function. eg.
+
+```go
+//ftl:verb
+func Echo(ctx context.Context, in EchoRequest, tc time.TimeClient) (EchoResponse, error) {
+	out, err := tc(ctx, TimeRequest{...})
+}
+```
+
+Verb clients are generated by FTL. If the callee verb belongs to the same module as the caller, you must build the 
+module first (with callee verb defined) in order to generate its client for use by the caller. Local verb clients are 
+available in the generated `types.ftl.go` file as `{VerbName}Client`.
+
+To call a verb, import the module's verb client, add it to your verb's signature, then `call()` it. eg.
+
+```kotlin
+import ftl.time.TimeClient
+
+@Verb
+fun echo(req: EchoRequest, time: TimeClient): EchoResponse {
+  val response = time.call()
+  // ...
+}
+
+val response = time.call()
+```
+Verb clients are generated by FTL. If the callee verb belongs to the same module as the caller, you must manually define your
+own client:
+
+```kotlin
+@VerbClient(name="time")
+interface TimeClient {
+    fun call(): TimeResponse
+}
+```
+{% end %}
+
+
+=== docs/reference/retries.md ===
+
+
+Some FTL features allow specifying a retry policy via a Go comment directive. Retries back off exponentially until the maximum is reached.
+
+The directive has the following syntax:
+
+{% codeselector() %}
+
+```go
+//ftl:retry [<attempts=10>] <min-backoff> [<max-backoff=1hr>] [catch <catchVerb>]
+```
+
+```kotlin
+@Retry(attempts = 10, minBackoff = "5s", maxBackoff = "1h", catchVerb = "<catchVerb>", catchModule = "<catchModule>")
+```
+
+```java
+@Retry(attempts = 10, minBackoff = "5s", maxBackoff = "1h", catchVerb = "<catchVerb>", catchModule = "<catchModule>")
+```
+
+{% end %}
+
+For example, the following function will retry up to 10 times, with a delay of 5s, 10s, 20s, 40s, 60s, 60s, etc.
+
+{% codeselector() %}
+
+```go
+//ftl:retry 10 5s 1m
+func Process(ctx context.Context, in Invoice) error {
+  // ...
+}
+```
+
+```kotlin
+@Retry(count = 10, minBackoff = "5s", maxBackoff = "1m")
+fun process(inv: Invoice) {
+    // ... 
+}
+```
+
+```java
+@Retry(count = 10, minBackoff = "5s", maxBackoff = "1m")
+public void process(Invoice in) {
+    // ... 
+}
+```
+
+{% end %}
+
+PubSub
+
+Subscribers can have a retry policy. For example:
+
+{% codeselector() %}
+
+```go
+//ftl:subscribe exampleSubscription
+//ftl:retry 5 1s catch recoverPaymentProcessing
+func ProcessPayment(ctx context.Context, payment Payment) error {
+...
+}
+```
+
+```kotlin
+@Subscription(topic = "example", module = "publisher", name = "exampleSubscription")
+@Retry(count = 5, minBackoff = "1s", catchVerb = "recoverPaymentProcessing")
+fun processPayment(payment: Payment) {
+    // ... 
+}
+```
+
+```java
+@Subscription(topic = "example", module = "publisher", name = "exampleSubscription")
+@Retry(count = 5, minBackoff = "1s", catchVerb = "recoverPaymentProcessing")
+public void processPayment(Payment payment) {
+    // ... 
+}
+```
+
+{% end %}
+FSM
+
+Retries can be declared on the FSM or on individual transition verbs. Retries declared on a verb take precedence over ones declared on the FSM. For example:
+```go
+//ftl:retry 10 1s 10s
+var fsm = ftl.FSM("fsm",
+	ftl.Start(Start),
+	ftl.Transition(Start, End),
+)
+
+//ftl:verb
+//ftl:retry 1 1s 1s
+func Start(ctx context.Context, in Event) error {
+	// Start uses its own retry policy
+}
+
+//ftl:verb
+func End(ctx context.Context, in Event) error {
+	// End inherits the default retry policy from the FSM
+}
+```
+
+Catching
+After all retries have failed, a catch verb can be used to safely recover.
+
+These catch verbs have a request type of `builtin.CatchRequest<Req>` and no response type. If a catch verb returns an error, it will be retried until it succeeds so it is important to handle errors carefully.
+
+{% codeselector() %}
+
+```go
+//ftl:retry 5 1s catch recoverPaymentProcessing
+func ProcessPayment(ctx context.Context, payment Payment) error {
+...
+}
+
+//ftl:verb
+func RecoverPaymentProcessing(ctx context.Context, request builtin.CatchRequest[Payment]) error {
+// safely handle final failure of the payment
+}
+```
+
+```kotlin
+
+@Retry(count = 5, minBackoff = "1s", catchVerb = "recoverPaymentProcessing")
+fun processPayment(payment: Payment) {
+    // ... 
+}
+
+@Verb
+fun recoverPaymentProcessing(req: CatchRequest<Payment>) {
+    // safely handle final failure of the payment
+}
+```
+
+```java
+@Retry(count = 5, minBackoff = "1s", catchVerb = "recoverPaymentProcessing")
+public void processPayment(Payment payment) {
+    // ... 
+}
+
+@Verb
+public void recoverPaymentProcessing(CatchRequest<Payment> req) {
+    // safely handle final failure of the payment
+}
+```
+
+{% end %}
+
+For FSMs, after a catch verb has been successfully called the FSM will moved to the failed state.
+
+
+=== docs/reference/matrix.md ===
+
+
+| System        | Feature         | Go  | JVM | Rust |
+| :------------ | :-------------- | :-- | :-- | :--- |
+| Types     | Basic Types     | ✔️  | ✔️  | ️ ✔️ |
+|               | Optional Type   | ✔️  | ✔️  |      |
+|               | Unit Type       | ✔️  | ✔️  |      |
+|               | Empty Type      | ✔️  | ✔️  |      |
+|               | Generic Types   | ✔️  | ✔️  |      |
+|               | Type Aliases    | ✔️  | ️   |      |
+|               | Value Enums     | ✔️  | ️   |      |
+|               | Type Enums      | ✔️  | ️   |      |
+|               | Visibility      | ✔️  | ✔️  |      |
+| Verbs     | Verb            | ✔️  | ✔️  | ️✔️  |
+|               | Sink            | ✔️  | ✔️  |      |
+|               | Source          | ✔️  | ✔️  |      |
+|               | Empty           | ✔️  | ✔️  |      |
+|               | Visibility      | ✔️  | ✔️  |      |
+| Core      | FSM             | ✔️  | ️   |      |
+|               | Leases          | ✔️  | ✔️  |      |
+|               | Cron            | ✔️  | ✔️  |      |
+|               | Config          | ✔️  | ✔️  |      |
+|               | Secrets         | ✔️  | ✔️  |      |
+|               | HTTP Ingress    | ✔️  | ✔️  |      |
+| Resources | PostgreSQL      | ✔️  | ✔️  |      |
+|               | MySQL           |     |     |      |
+|               | Kafka           |     |     |      |
+| PubSub    | Declaring Topic | ✔️  | ✔️  |      |
+|               | Subscribing     | ✔️  | ✔️  |      |
+|               | Publishing      | ✔️  | ✔️  |      |
+
+
+=== docs/reference/externaltypes.md ===
+
+
+Using external types
+
+FTL supports the use of external types in your FTL modules. External types are types defined in other packages or modules that are not part of the FTL module.
+
+The primary difference is that external types are not defined in the FTL schema, and therefore serialization and deserialization of these types is not handled 
+by FTL. Instead, FTL relies on the runtime to handle serialization and deserialization of these types.
+
+In some cases this feature can also be used to provide custom serialization and deserialization logic for types that are not directly supported by FTL, even
+if they are defined in the same package as the FTL module.
+
+To use an external type in your FTL module schema, declare a type alias over the external type:
+
+{% codeselector() %}
+
+```go
+//ftl:typealias
+type FtlType external.OtherType
+
+//ftl:typealias
+type FtlType2 = external.OtherType
+```
+
+The external type is widened to `Any` in the FTL schema, and the corresponding type alias will include metadata
+for the runtime-specific type mapping:
+
+```
+typealias FtlType Any
+  +typemap go "github.com/external.OtherType"
+```
+
+```kotlin 
+@TypeAlias(name = "OtherType")
+class OtherTypeTypeMapper : TypeAliasMapper<OtherType, JsonNode> {
+    override fun encode(`object`: OtherType): JsonNode {
+        return TextNode.valueOf(`object`.value)
+    }
+
+    override fun decode(serialized: JsonNode): OtherType {
+        if (serialized.isTextual) {
+            return OtherType(serialized.textValue())
+        }
+        throw RuntimeException("Expected a textual value")
+    }
+}
+```
+
+In the example above the external type is widened to `Any` in the FTL schema, and the corresponding type alias will include metadata
+for the runtime-specific type mapping:
+
+```
+typealias FtlType Any
+  +typemap java "foo.bar.OtherType"
+```
+
+Note that for JVM languages `java` is always used as the runtime name, regardless of the actual language used.
+
+It is also possible to map to any other valid FTL type (e.g. `String`) by use this as the second type parameter:
+
+Users can achieve functionally equivalent behavior to using the external type directly by using the declared
+alias (`FtlType`) in place of the external type in any other schema declarations (e.g. as the type of a Verb request). Direct usage of the external type in schema declarations is not supported;
+instead, the type alias must be used.
+
+```kotlin 
+@TypeAlias(name = "OtherType")
+class OtherTypeTypeMapper : TypeAliasMapper<OtherType, String> {
+    override fun encode(other: OtherType): JsonNode {
+        return other.value
+    }
+
+    override fun decode(serialized: String): OtherType {
+        return OtherType(serialized.textValue())
+    }
+}
+```
+
+The corresponding type alias will be to a `String`, which makes the schema more useful:
+
+```
+typealias FtlType String
+  +typemap kotlin "foo.bar.OtherType"
+```
+
+```java
+@TypeAlias(name = "OtherType")
+public class OtherTypeTypeMapper implements TypeAliasMapper<OtherType, JsonNode> {
+    @Override
+    public JsonNode encode(OtherType object) {
+        return TextNode.valueOf(object.getValue());
+    }
+
+    @Override
+    public AnySerializedType decode(OtherType serialized) {
+        if (serialized.isTextual()) {
+            return new OtherType(serialized.textValue());
+        }
+        throw new RuntimeException("Expected a textual value");
+    }
+}
+```
+
+In the example above the external type is widened to `Any` in the FTL schema, and the corresponding type alias will include metadata
+for the runtime-specific type mapping:
+
+```
+typealias FtlType Any
+  +typemap java "foo.bar.OtherType"
+```
+
+It is also possible to map to any other valid FTL type (e.g. `String`) by use this as the second type parameter:
+
+```java
+@TypeAlias(name = "OtherType")
+public class OtherTypeTypeMapper implements TypeAliasMapper<OtherType, String> {
+    @Override
+    public String encode(OtherType object) {
+        return object.getValue();
+    }
+
+    @Override
+    public String decode(OtherType serialized) {
+        return new OtherType(serialized.textValue());
+    }
+}
+```
+
+The corresponding type alias will be to a `String`, which makes the schema more useful:
+
+```
+typealias FtlType String
+  +typemap java "com.external.other.OtherType"
+```
+{% end %}
+
+FTL will automatically serialize and deserialize the external type to the strong type indicated by the mapping.
+
+Cross-Runtime Type Mappings
+
+FTL also provides the capability to declare type mappings for other runtimes. For instance, to include a type mapping for another language, you can 
+annotate your type alias declaration as follows:
+
+{% codeselector() %}
+
+```go
+//ftl:typealias
+//ftl:typemap java "com.external.other.OtherType"
+type FtlType external.OtherType
+```
+
+```kotlin
+@TypeAlias(
+  name = "OtherType",
+  languageTypeMappings = [LanguageTypeMapping(language = "go", type = "github.com/external.OtherType")]
+)
+```
+
+```java
+@TypeAlias(name = "OtherType", languageTypeMappings = {
+        @LanguageTypeMapping(language = "go", type = "github.com/external.OtherType"),
+})
+...
+```
+
+{% end %}
+
+In the FTL schema, this will appear as:
+
+```
+typealias FtlType Any
+  +typemap go "github.com/external.OtherType"
+  +typemap java "com.external.other.OtherType"
+```
+
+This allows FTL to decode the type properly in other languages, for seamless 
+interoperability across different runtimes.
+
+
+=== docs/reference/start.md ===
+
+
+Import the runtime
+
+{% code_selector() %}
+
+Some aspects of FTL rely on a runtime which must be imported with:
+
+```go
+import "github.com/TBD54566975/ftl/go-runtime/ftl"
+```
+
+The easiest way to get started with Kotlin is to use the `ftl-build-parent-kotlin` parent POM. This will automatically include the FTL runtime as a dependency, and setup all required plugins:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.myproject</groupId>
+    <artifactId>myproject</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <parent>
+        <groupId>xyz.block.ftl</groupId>
+        <artifactId>ftl-build-parent-kotlin</artifactId>
+        <version>${ftl.version}</version>
+    </parent>
+
+</project>
+```
+
+If you do not want to use a parent pom then you can copy the plugins and dependencies from the parent pom into your own pom.
+
+The easiest way to get started with Java is to use the `ftl-build-parent-java` parent POM. This will automatically include the FTL runtime as a dependency, and setup all required plugins:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.myproject</groupId>
+    <artifactId>myproject</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <parent>
+        <groupId>xyz.block.ftl</groupId>
+        <artifactId>ftl-build-parent-java</artifactId>
+        <version>${ftl.version}</version>
+    </parent>
+
+</project>
+```
+
+If you do not want to use a parent pom then you can copy the plugins and dependencies from the parent pom into your own pom.
+
+{% end %}
+
+
+=== docs/reference/unittests.md ===
+
+
+Create a context
+
+When writing a unit test, first create a context:
+```go
+func ExampleTest(t testing.Test) {
+    ctx := ftltest.Context(
+        // options go here
+    )
+}
+```
+
+FTL will help isolate what you want to test by restricting access to FTL features by default. You can expand what is available to test by adding options to `ftltest.Context(...)`.
+
+In this default set up, FTL does the following:
+- prevents access to `ftl.ConfigValue` and `ftl.SecretValue` (See options)
+- prevents access to `ftl.Database` (See options)
+- prevents access to `ftl.MapHandle` (See options)
+- disables all subscribers (See options)
+
+Customization
+Project files, configs and secrets
+
+To enable configs and secrets from the default project file:
+```go
+ctx := ftltest.Context(
+    ftltest.WithDefaultProjectFile(),
+)
+```
+
+Or you can specify a specific project file:
+```go
+ctx := ftltest.Context(
+    ftltest.WithProjectFile(path),
+)
+```
+
+You can also override specific config and secret values:
+```go
+ctx := ftltest.Context(
+    ftltest.WithDefaultProjectFile(),
+    
+    ftltest.WithConfig(endpoint, "test"),
+    ftltest.WithSecret(secret, "..."),
+)
+```
+
+Databases
+By default, calling `Get(ctx)` on a database panics.
+
+To enable database access in a test, you must first provide a DSN via a project file. You can then set up a test database:
+```go
+ctx := ftltest.Context(
+    ftltest.WithDefaultProjectFile(),
+    ftltest.WithDatabase(db),
+)
+```
+This will:
+- Take the provided DSN and appends `test` to the database name. Eg: `accounts` becomes `accounts_test`
+- Wipe all tables in the database so each test run happens on a clean database
+
+Maps
+By default, calling `Get(ctx)` on a map handle will panic.
+
+You can inject a fake via a map:
+```go
+ctx := ftltest.Context(
+    ftltest.WhenMap(exampleMap, func(ctx context.Context) (string, error) {
+       return "Test Value"
+    }),
+)
+```
+
+You can also allow the use of all maps:
+```go
+ctx := ftltest.Context(
+    ftltest.WithMapsAllowed(),
+)
+```
+
+Calls
+Use `ftltest.CallClient` (or `ftltest.CallSourceClient`, `ftltest.CallSinkClient`, `ftltest.CallEmptyClient`) to invoke your 
+verb. At runtime, FTL automatically provides these 
+resources to your verb, and using `ftltest.Call(...)` rather than direct invocations simulates this behavior.
+
+```go
+// Call a verb
+resp, err := ftltest.CallExampleVerbClient, Request, Response
+```
+You can inject fakes for verbs:
+```go
+ctx := ftltest.Context(
+    ftltest.WhenVerbExampleVerbClient (Response, error) {
+       return Response{Result: "Lorem Ipsum"}, nil
+    }),
+)
+```
+If there is no request or response parameters, you can use `WhenSource(...)`, `WhenSink(...)`, or `WhenEmpty(...)`.
+
+To enable all calls within a module:
+```go
+ctx := ftltest.Context(
+    ftltest.WithCallsAllowedWithinModule(),
+)
+```
+
+PubSub
+By default, all subscribers are disabled.
+To enable a subscriber:
+```go
+ctx := ftltest.Context(
+    ftltest.WithSubscriber(paymentsSubscription, ProcessPayment),
+)
+```
+
+Or you can inject a fake subscriber:
+```go
+ctx := ftltest.Context(
+    ftltest.WithSubscriber(paymentsSubscription, func (ctx context.Context, in PaymentEvent) error {
+       return fmt.Errorf("failed payment: %v", in)
+    }),
+)
+```
+
+Due to the asynchronous nature of pubsub, your test should wait for subscriptions to consume the published events:
+```go
+topic.Publish(ctx, Event{Name: "Test"})
+
+ftltest.WaitForSubscriptionsToComplete(ctx)
+// Event will have been consumed by now
+```
+
+You can check what events were published to a topic:
+```go
+events := ftltest.EventsForTopic(ctx, topic)
+```
+
+You can check what events were consumed by a subscription, and whether a subscriber returned an error:
+```go
+results := ftltest.ResultsForSubscription(ctx, subscription)
+```
+
+If all you wanted to check was whether a subscriber returned an error, this function is simpler:
+```go
+errs := ftltest.ErrorsForSubscription(ctx, subscription)
+```
+
+PubSub also has these different behaviours while testing:
+- Publishing to topics in other modules is allowed
+- If a subscriber returns an error, no retries will occur regardless of retry policy.
+
+
+=== docs/reference/types.md ===
+
+
+FTL supports the following types: `Int` (64-bit), `Float` (64-bit), `String`, `Bytes` (a byte array), `Bool`, `Time`, `Any` (a dynamic type), `Unit` (similar to "void"), arrays, maps, data structures, and constant enumerations. Each FTL type is mapped to a corresponding language-specific type. For example in Go `Float` is represented as `float64`, `Time` is represented by `time.Time`, and so on. [^1]
+
+Any Go type supported by FTL and referenced by an FTL declaration will be automatically exposed to an FTL type.
+
+For example, the following verb declaration will result in `Request` and `Response` being automatically translated to FTL types.
+
+```go
+type Request struct {}
+type Response struct {}
+
+//ftl:verb
+func Hello(ctx context.Context, in Request) (Response, error) {
+  // ...
+}
+```
+
+Type enums (sum types)
+
+Sum types are supported by FTL's type system, but aren't directly supported by Go. However they can be approximated with the use of sealed interfaces. To declare a sum type in FTL use the comment directive `//ftl:enum`:
+
+```go
+//ftl:enum
+type Animal interface { animal() }
+
+type Cat struct {}
+func (Cat) animal() {}
+
+type Dog struct {}
+func (Dog) animal() {}
+```
+
+Value enums
+
+A value enum is an enumerated set of string or integer values.
+
+```go
+//ftl:enum
+type Colour string
+
+const (
+  Red   Colour = "red"
+  Green Colour = "green"
+  Blue  Colour = "blue"
+)
+```
+
+Type aliases
+
+A type alias is an alternate name for an existing type. It can be declared like so:
+
+```go
+//ftl:typealias
+type Alias Target
+```
+or
+```go
+//ftl:typealias
+type Alias = Target
+```
+
+eg.
+
+```go
+//ftl:typealias
+type UserID string
+
+//ftl:typealias
+type UserToken = string
+```
+
+---
+
+Optional types
+
+FTL supports optional types, which are types that can be `None` or `Some` and can be declared via `ftl.Option[T]`. These types are provided by the `ftl` runtimes. For example, the following FTL type declaration in go, will provide an optional string type "Name":
+
+```go
+type EchoResponse struct {
+	Name ftl.Option[string] `json:"name"`
+}
+```
+
+The value of this type can be set to `Some` or `None`:
+
+```go
+resp := EchoResponse{
+  Name: ftl.Some("John"),
+}
+
+resp := EchoResponse{
+  Name: ftl.None(),
+}
+```
+
+The value of the optional type can be accessed using `Get`, `MustGet`, or `Default` methods:
+
+```go
+// Get returns the value and a boolean indicating if the Option contains a value.
+if value, ok := resp.Name.Get(); ok {
+  resp.Name = ftl.Some(value)
+}
+
+// MustGet returns the value or panics if the Option is None.
+value := resp.Name.MustGet()
+
+// Default returns the value or a default value if the Option is None.
+value := resp.Name.Default("default")
+``` 
+
+Unit "void" type
+
+The `Unit` type is similar to the `void` type in other languages. It is used to indicate that a function does not return a value. For example:
+
+```go
+//ftl:ingress GET /unit
+func Unit(ctx context.Context, req builtin.HttpRequest[ftl.Unit, ftl.Unit, TimeRequest]) (builtin.HttpResponse[ftl.Unit, string], error) {
+	return builtin.HttpResponse[ftl.Unit, string]{Body: ftl.Some(ftl.Unit{})}, nil
+}
+```
+
+This request will return an empty body with a status code of 200:
+
+```sh
+curl http://localhost:8891/unit -i
+```
+
+```http
+HTTP/1.1 200 OK
+Date: Mon, 12 Aug 2024 17:58:22 GMT
+Content-Length: 0
+```
+
+Builtin types
+
+FTL provides a set of builtin types that are automatically available in all FTL runtimes. These types are:
+
+- `builtin.HttpRequest[Body, PathParams, QueryParams]` - Represents an HTTP request with a body of type `Body`, path parameter type of `PathParams` and a query parameter type of `QueryParams`.
+- `builtin.HttpResponse[Body, Error]` - Represents an HTTP response with a body of type `Body` and an error of type `Error`.
+- `builtin.Empty` - Represents an empty type. This equates to an empty structure `{}`.
+- `builtin.CatchRequest` - Represents a request structure for catch verbs.
+
+
+=== docs/reference/cron.md ===
+
+
+A cron job is an Empty verb that will be called on a schedule. The syntax is described here.
+
+You can also use a shorthand syntax for the cron job, supporting seconds (`s`), minutes (`m`), hours (`h`), and specific days of the week (e.g. `Mon`).
+
+Examples
+
+The following function will be called hourly:
+
+{% codeselector() %}
+
+```go
+//ftl:cron 0    
+func Hourly(ctx context.Context) error {
+  // ...
+}
+```
+
+```kotlin
+import xyz.block.ftl.Cron
+@Cron("0    ")
+fun hourly() {
+    
+}
+```
+
+```java
+import xyz.block.ftl.Cron;
+
+class MyCron {
+    @Cron("0    ")
+    void hourly() {
+        
+    }
+}
+```
+
+{% end %}
+Every 12 hours, starting at UTC midnight:
+
+{% codeselector() %}
+
+```go
+//ftl:cron 12h
+func TwiceADay(ctx context.Context) error {
+  // ...
+}
+```
+
+```kotlin
+import xyz.block.ftl.Cron
+@Cron("12h")
+fun twiceADay() {
+    
+}
+```
+
+```java
+import xyz.block.ftl.Cron;
+
+class MyCron {
+    @Cron("12h")
+    void twiceADay() {
+        
+    }
+}
+```
+{% end %}
+
+Every Monday at UTC midnight:
+
+{% code_selector() %}
+
+```go
+//ftl:cron Mon
+func Mondays(ctx context.Context) error {
+  // ...
+}
+```
+
+```kotlin
+import xyz.block.ftl.Cron
+@Cron("Mon")
+fun mondays() {
+    
+}
+```
+
+```java
+import xyz.block.ftl.Cron;
+
+class MyCron {
+    @Cron("Mon")
+    void mondays() {
+        
+    }
+}
+```
+{% end %}
+
+
+=== docs/reference/ingress.md ===
+
+
+Verbs annotated with `ftl:ingress` will be exposed via HTTP (`http` is the default ingress type). These endpoints will then be available on one of our default `ingress` ports (local development defaults to `http://localhost:8891`).
+
+The following will be available at `http://localhost:8891/http/users/123/posts?postId=456`.
+
+{% codeselector() %}
+
+```go
+type GetRequestPathParams struct {
+	UserID string `json:"userId"`
+}
+
+type GetRequestQueryParams struct {
+	PostID string `json:"postId"`
+}
+
+type GetResponse struct {
+	Message string `json:"msg"`
+}
+
+//ftl:ingress GET /http/users/{userId}/posts
+func Get(ctx context.Context, req builtin.HttpRequest[ftl.Unit, GetRequestPathParams, GetRequestQueryParams]) (builtin.HttpResponse[GetResponse, ErrorResponse], error) {
+  // ...
+}
+```
+
+Because the example above only has a single path parameter it can be simplified by just using a scalar such as `string` or `int64` as the path parameter type:
+
+```go
+
+//ftl:ingress GET /http/users/{userId}/posts
+func Get(ctx context.Context, req builtin.HttpRequest[ftl.Unit, int64, GetRequestQueryParams]) (builtin.HttpResponse[GetResponse, ErrorResponse], error) {
+  // ...
+}
+```
+
+> NOTE!**
+> The `req` and `resp` types of HTTP `ingress` verbs must be `builtin.HttpRequest` and `builtin.HttpResponse` respectively. These types provide the necessary fields for HTTP `ingress` (`headers`, `statusCode`, etc.)
+>
+> You will need to import `ftl/builtin`.
+
+Key points:
+
+- `ingress` verbs will be automatically exported by default.
+
+Field mapping
+
+The `HttpRequest` request object takes 3 type parameters, the body, the path parameters and the query parameters.
+
+Given the following request verb:
+
+```go
+
+type PostBody struct{
+	Title string               `json:"title"`
+	Content string             `json:"content"`
+	Tag ftl.Option[string]     `json:"tag"`
+}
+type PostPathParams struct {
+	UserID string             `json:"userId"`
+	PostID string             `json:"postId"`
+}
+
+type PostQueryParams struct {
+	Publish boolean `json:"publish"`
+}
+
+//ftl:ingress http PUT /users/{userId}/posts/{postId}
+func Get(ctx context.Context, req builtin.HttpRequest[PostBody, PostPathParams, PostQueryParams]) (builtin.HttpResponse[GetResponse, string], error) {
+	return builtin.HttpResponse[GetResponse, string]{
+		Headers: map[string][]string{"Get": {"Header from FTL"}},
+		Body: ftl.Some(GetResponse{
+			Message: fmt.Sprintf("UserID: %s, PostID: %s, Tag: %s", req.pathParameters.UserID, req.pathParameters.PostID, req.Body.Tag.Default("none")),
+		}),
+	}, nil
+}
+```
+
+The rules for how each element is mapped are slightly different, as they have a different structure:
+
+- The body is mapped directly to the body of the request, generally as a JSON object. Scalars are also supported, as well as []byte to get the raw body. If they type is `any` then it will be assumed to be JSON and mapped to the appropriate types based on the JSON structure.
+- The path parameters can be mapped directly to an object with field names corresponding to the name of the path parameter. If there is only a single path parameter it can be injected directly as a scalar. They can also be injected as a `map[string]string`.
+- The path parameters can also be mapped directly to an object with field names corresponding to the name of the path parameter. They can also be injected directly as a `map[string]string`, or `map[string][]string` for multiple values.
+
+Optional fields
+
+Optional fields are represented by the `ftl.Option` type. The `Option` type is a wrapper around the actual type and can be `Some` or `None`. In the example above, the `Tag` field is optional.
+
+```sh
+curl -i http://localhost:8891/users/123/posts/456
+```
+
+Because the `tag` query parameter is not provided, the response will be:
+
+```json
+{
+  "msg": "UserID: 123, PostID: 456, Tag: none"
+}
+```
+
+Casing
+
+Field names use lowerCamelCase by default. You can override this by using the `json` tag.
+
+SumTypes
+
+Given the following request verb:
+
+```go
+//ftl:enum export
+type SumType interface {
+	tag()
+}
+
+type A string
+
+func (A) tag() {}
+
+type B []string
+
+func (B) tag() {}
+
+//ftl:ingress http POST /typeenum
+func TypeEnum(ctx context.Context, req builtin.HttpRequest[SumType, ftl.Unit, ftl.Unit]) (builtin.HttpResponse[SumType, string], error) {
+	return builtin.HttpResponse[SumType, string]{Body: ftl.Some(req.Body)}, nil
+}
+```
+
+The following curl request will map the `SumType` name and value to the `req.Body`:
+
+```sh
+curl -X POST "http://localhost:8891/typeenum" \
+     -H "Content-Type: application/json" \
+     --data '{"name": "A", "value": "sample"}'
+```
+
+The response will be:
+
+```json
+{
+  "name": "A",
+  "value": "sample"
+}
+```
+
+Encoding query params as JSON
+
+Complex query params can also be encoded as JSON using the `@json` query parameter. For example:
+
+> `{"tag":"ftl"}` url-encoded is `%7B%22tag%22%3A%22ftl%22%7D`
+
+```bash
+curl -i http://localhost:8891/users/123/posts/456?@json=%7B%22tag%22%3A%22ftl%22%7D
+```
+
+JVM Languages use the `JAX-RS` annotations to define HTTP endpoints. The following example shows how to define an HTTP endpoint in Java. As the underling implementation is based on Quarkus
+it is also possible to use the Quarkus extensions to the JAX-RS annotations:
+
+In general the difference between the Quarkus annotation and the standard JAX-RS ones is that the Quarkus parameters infer the parameter name from the method parameter name, while the JAX-RS ones require the parameter name to be explicitly defined.
+
+```java
+
+import java.util.List;
+
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+
+import jakarta.ws.rs.QueryParam; // JAX-RS annotation to get the query parameter
+import org.jboss.resteasy.reactive.RestPath; // Quarkus annotation to get the path parameter
+
+@Path("/")
+public class TestHTTP {
+
+    @GET
+    @Path("/http/users/{userId}/posts")
+    public String get(@RestPath String userId, @QueryParam("postId") String post) {
+        //...
+    }
+
+}
+```
+Under the hood these HTTP invocations are being mapped to verbs that take a `builtin.HttpRequest` and return a `builtin.HttpResponse`. This is not exposed directly to the user, but is instead mapped directly to `JAX-RS` annotations. 
+
+{% end %}
+
+
+=== docs/reference/secretsconfig.md ===
+
+
+Configuration
+
+Configuration values are named, typed values. They are managed by the `ftl config` command-line.
+
+{% codeselector() %}
+
+To declare a configuration value use the following syntax:
+
+```go
+var defaultUser = ftl.ConfigUsername
+```
+
+Then to retrieve a configuration value:
+
+```go
+username = defaultUser.Get(ctx)
+```
+
+Configuration values can be injected into FTL methods, such as `@Verb`, HTTP ingress, Cron etc. To inject a configuration value, use the following syntax:
+
+```kotlin
+@Export
+@Verb
+fun hello(helloRequest: HelloRequest, @Config("defaultUser") defaultUser: String): HelloResponse {
+    return HelloResponse("Hello, $defaultUser")
+}
+```
+
+Configuration values can be injected into FTL methods, such as `@Verb`, HTTP ingress, Cron etc. To inject a configuration value, use the following syntax:
+
+```java
+@Export
+@Verb
+HelloResponse hello(HelloRequest helloRequest, @Config("defaultUser") String defaultUser)  {
+    return new HelloResponse("Hello, " + defaultUser);
+}
+```
+
+{% end %}
+
+Secrets
+
+Secrets are encrypted, named, typed values. They are managed by the `ftl secret` command-line.
+
+{% codeselector() %}
+
+Declare a secret with the following:
+
+```go
+var apiKey = ftl.SecretCredentials
+```
+
+Then to retrieve a secret value:
+
+```go
+key = apiKey.Get(ctx)
+```
+
+Configuration values can be injected into FTL methods, such as `@Verb`, HTTP ingress, Cron etc. To inject a configuration value, use the following syntax:
+
+```kotlin
+@Export
+@Verb
+fun hello(helloRequest: HelloRequest, @Secret("apiKey") apiKey: String): HelloResponse {
+    return HelloResponse("Hello, ${api.call(apiKey)}")
+}
+```
+
+Configuration values can be injected into FTL methods, such as `@Verb`, HTTP ingress, Cron etc. To inject a configuration value, use the following syntax:
+
+```java
+@Export
+@Verb
+HelloResponse hello(HelloRequest helloRequest, @Secret("apiKey") String apiKey)  {
+    return new HelloResponse("Hello, " + api.call(apiKey));
+}
+```
+
+{% end %}
+Transforming secrets/configuration
+
+Often, raw secret/configuration values aren't directly useful. For example, raw credentials might be used to create an API client. For those situations `ftl.Map()` can be used to transform a configuration or secret value into another type:
+
+```go
+var client = ftl.Map(ftl.SecretCredentials,
+                     func(ctx context.Context, creds Credentials) (*api.Client, error) {
+    return api.NewClient(creds)
+})
+```
+
+This is not currently supported in Kotlin or Java.
+
+
+=== docs/help/glossary.md ===
+
+
+Verb
+
+A Verb is a remotely callable function that takes an input and returns an output.
+
+```go
+func(context.Context, In) (Out, error)
+```
+
+Sink
+
+A Sink is a function that takes an input and returns nothing.
+
+```go
+func(context.Context, In) error
+```
+
+Source
+
+A Source is a function that takes no input and returns an output.
+
+```go
+func(context.Context) (Out, error)
+```
+
+Empty
+
+An Empty function is one that takes neither input or output.
+
+```go
+func(context.Context) error
+```
+
+
+=== docs/help/faq.md ===
+
+
+Why does FTL not allow external types directly?
+
+Because of the nature of writing FTL verbs and data types, it's easy to think of it as just writing standard native code. Through that lens it is then somewhat surprising when FTL disallows the use of arbitrary external data types.
+
+However, FTL types are not just native types. FTL types are a more convenient method of writing an IDL such as Protobufs, OpenAPI or Thrift. With this in mind the constraint makes more sense. An IDL by its very nature must support a multitude of languages, so including an arbitrary type from a third party native library in one language may not be translatable to another language.
+
+There are also secondary reasons, such as:
+
+- Unclear ownership - in FTL a type must be owned by a single module. When importing a common third party type from multiple modules, which module owns that type?
+- An external type must be representable in the FTL schema. The schema is then used to generate types for other modules, including those in other languages. For an external type, FTL could track the external library it belongs to to generate the "correct" code, but this would only be representable in a single language.
+- External types often perform custom marshalling to/from JSON. This is not representable cross-language.
+- Cleaner separation of abstraction layers - the ability to mix in abitrary external types is convenient, but can easily lead to mixing of concerns between internal and external data representations.
+
+So what to do? See the external types documentation 
+for how to work around this limitation.
+
+What is a "module"?
+
+In its least abstract form, a module is a collection of verbs, and the resources (databases, queues, cron jobs, secrets, config, etc.) that those verbs rely on to operate. All resources are private to their owning module.
+
+More abstractly, the separation of concerns between modules is largely subjective. You can think of each module as largely analogous to a traditional service, so when asking where the division between modules is that could inform your decision. That said, the ease of deploying modules in FTL is designed to give you more flexibility in how you structure your code.
+
+How do I represent optional/nullable values?
+
+FTL's type system includes support for optionals. In Go this is represented as `ftl.Option[T]`, in languages with first-class support for optionals such as Kotlin, FTL will leverage the native type system.
+
+When FTL is mapping to JSON, optional values will be represented as `null`.
+
+In Go specifically, pointers to values are not supported because pointers are semantically ambiguous and error prone. They can mean, variously: "this value may or may not be present", or "this value just happens to be a pointer", or "this value is a pointer because it's mutable"
+
+Additionally pointers to builtin types are painful to use in Go because you can't obtain a reference to a literal.
+
+Why must requests/responses be data structures, can't they be arrays, etc.?
+
+This is currently due to FTL relying on traditional schema evolution for forwards/backwards compatibility - eg. changing a slice to a struct in a backward compatible way is not possible, as an existing deployed peer consuming the slice will fail if it suddenly changes to a data structure.
+
+Eventually FTL will allow multiple versions of a verb to be simultaneously deployed, such that a version returning a slice can coexist temporarily with a version returning a struct. Once all peers have been updated to support the new type signature, the old version will be dropped.
+
+I can't export a Verb from a nested package inside a subdirectory of the module root. What do I do?
+
+Verbs and types can only be exported from the top level of each module. You are welcome to put any helper code you'd like in a nested package/directory.
+
+What types are supported by FTL?
+
+FTL supports the following types: `Int` (64-bit), `Float` (64-bit), `String`, `Bytes` (a byte array), `Bool`, `Time`, `Any` (a dynamic type), `Unit` (similar to "void"), arrays, maps, data structures, and constant enumerations. Each FTL type is mapped to a corresponding language-specific type. For example in Go `Float` is represented as `float64`, `Time` is represented by `time.Time`, and so on.
+
+Note that currently (until type widening is implemented), external types are not supported.
+
+SQL errors on startup?
+
+For example:
+
+```bash
+ftl dev                                                                                            ~/src/ftl
+info: Starting FTL with 1 controller(s)
+ftl: error: ERROR: relation "fsm_executions" does not exist (SQLSTATE 42P01)
+```
+
+Run again with `ftl dev --recreate`. This usually indicates that your DB has an old schema.
+
+This can occur when FTL has been upgraded with schema changes, making the database out of date. While in alpha we do not use schema migrations, so this won't occur once we hit a stable release.
