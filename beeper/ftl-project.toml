@@ -1,0 +1,6 @@
+name = "beeper"
+ftl-min-version = "0.391.2"
+hermit = true
+
+[commands]
+  startup = [""]
